@@ -2,7 +2,7 @@
 
 > A machine learning system that predicts seasonal groundwater depth across 74 observation wells in the Pennar Basin, India — built using Random Forest and 32 years of climate data.
 
-🌐 **Live Demo → [aquapredict.github.io/groundwater-prediction](https://your-username.github.io/groundwater-prediction)**
+🌐 **Live Demo → [aquapredict.github.io/groundwater-prediction](https://gaurikansal6533.github.io/Groundwaterlevel-Prediction/)**
 
 ---
 
@@ -40,7 +40,7 @@ An interactive website was built so **anyone — technical or not — can use th
 - ⚡ **Predictor** — choose a real site, set climate values, get a prediction with a plain-English explanation of what the depth means for water access
 - 📊 **Results** — full dashboard with all 74 real sites, sortable metrics table, observed vs predicted chart
 
-👉 **[Try it live here](https://your-username.github.io/groundwater-prediction)**
+👉 **[Try it live here](https://gaurikansal6533.github.io/Groundwaterlevel-Prediction/)**
 
 ---
 
@@ -146,10 +146,10 @@ jupyter notebook Groundlevel_prediction.ipynb
 
 ## 🤝 Connect
 
-Built by **[Your Name]**
+Built by **[Gauri Kansal]**
 
-- 🔗 LinkedIn: [your-linkedin-url]
-- 💻 GitHub: [your-github-url]
+- 🔗 LinkedIn: [https://www.linkedin.com/in/gaurikansal6533/]
+- 💻 GitHub: [https://github.com/GauriKansal6533]
 
 ---
 
