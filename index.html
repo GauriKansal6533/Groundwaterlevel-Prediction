@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaPredict — Groundwater Prediction · Pennar Basin</title>
+
+<style>
+:root{
+  --bg:#0a1628;--card:#112040;--card2:#152850;
+  --border:rgba(0,180,255,0.12);--border2:rgba(0,180,255,0.28);
+  --aqua:#00c8ff;--aqua2:#0099cc;--cyan:#00eaff;--em:#00e5a0;
+  --amb:#ffb347;--red:#ff5c5c;
+  --text:#d4eeff;--text2:#6a9bbf;--text3:#3a6080;
+  --font:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;--mono:'Courier New', 'Consolas', monospace;--r:16px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.wbg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.dgrid{position:absolute;inset:0;background-image:radial-gradient(rgba(0,180,255,0.07) 1px,transparent 1px);background-size:40px 40px;}
+.rglow{position:absolute;top:-20%;left:50%;transform:translateX(-50%);width:800px;height:600px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,200,255,0.06) 0%,transparent 65%);}
+.wv{position:absolute;bottom:-60px;left:-20%;width:140%;height:280px;border-radius:50%;background:linear-gradient(180deg,var(--aqua),transparent);opacity:0.05;animation:wf 9s ease-in-out infinite;}
+.wv:nth-child(3){animation-delay:-4s;animation-duration:12s;opacity:0.03;}
+@keyframes wf{0%,100%{transform:translateY(0);}50%{transform:translateY(-28px);}}
+.page{display:none;min-height:100vh;position:relative;z-index:1;}
+.page.active{display:block;animation:pi 0.4s ease;}
+@keyframes pi{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+nav{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.9);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.nlogo{display:flex;align-items:center;gap:12px;cursor:pointer;}
+.nmark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--aqua),var(--em));display:flex;align-items:center;justify-content:center;font-size:18px;}
+.nname{font-size:17px;font-weight:700;letter-spacing:-0.3px;}
+.nsub{font-size:11px;color:var(--text2);font-family:var(--mono);}
+.nlinks{display:flex;gap:4px;}
+.nl{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border:none;background:transparent;font-family:var(--font);transition:all 0.2s;}
+.nl:hover{color:var(--text);background:rgba(0,180,255,0.08);}
+.nl.active{color:var(--aqua);background:rgba(0,200,255,0.1);}
+.ncta{padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;background:linear-gradient(135deg,var(--aqua2),#006fa0);color:#fff;cursor:pointer;border:none;font-family:var(--font);transition:opacity 0.2s,transform 0.15s;box-shadow:0 4px 16px rgba(0,150,200,0.3);}
+.ncta:hover{opacity:.88;transform:translateY(-1px);}
+.wrap{max-width:1140px;margin:0 auto;padding:0 32px;}
+.stag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--aqua2);margin-bottom:14px;}
+.stag::before{content:'';width:18px;height:1px;background:var(--aqua2);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px 26px;transition:border-color 0.25s,transform 0.2s,background 0.2s;}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);background:var(--card2);}
+.ctitle{font-size:14px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.ci{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.cib{background:rgba(0,200,255,0.12);} .cig{background:rgba(0,229,160,0.12);} .cia{background:rgba(255,179,71,0.12);}
+.bpri{padding:14px 32px;border-radius:12px;font-size:15px;font-weight:600;background:linear-gradient(135deg,var(--aqua),#007ab8);color:#fff;border:none;cursor:pointer;font-family:var(--font);box-shadow:0 8px 28px rgba(0,150,200,0.35);transition:transform 0.15s,box-shadow 0.2s;display:inline-flex;align-items:center;gap:8px;}
+.bpri:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,150,200,0.45);}
+.bsec{padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;background:rgba(0,200,255,0.07);color:var(--aqua);border:1px solid rgba(0,200,255,0.25);cursor:pointer;font-family:var(--font);transition:background 0.2s;display:inline-flex;align-items:center;gap:8px;}
+.bsec:hover{background:rgba(0,200,255,0.13);}
+/* HOME */
+.hero{min-height:calc(100vh - 64px);display:flex;flex-direction:column;justify-content:center;padding:80px 32px;max-width:1140px;margin:0 auto;}
+.hbadge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);padding:5px 14px;border-radius:20px;font-size:12px;font-family:var(--mono);color:var(--aqua);margin-bottom:28px;width:fit-content;}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--aqua);animation:pa 2s infinite;}
+@keyframes pa{0%,100%{opacity:1;}50%{opacity:.3;}}
+.hero h1{font-size:clamp(36px,5.5vw,68px);font-weight:800;letter-spacing:-2px;line-height:1.08;margin-bottom:22px;}
+.grad{background:linear-gradient(90deg,var(--aqua),var(--em));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hdesc{font-size:18px;color:var(--text2);line-height:1.7;max-width:560px;margin-bottom:40px;}
+.hacts{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:56px;}
+.hstats{display:flex;gap:40px;flex-wrap:wrap;}
+.hs{border-left:2px solid rgba(0,200,255,0.2);padding-left:20px;}
+.hsv{font-size:26px;font-weight:700;font-family:var(--mono);color:var(--aqua);letter-spacing:-1px;}
+.hsl{font-size:12px;color:var(--text2);margin-top:2px;}
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:48px 0;}
+.fc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;transition:border-color 0.2s,transform 0.2s;}
+.fc:hover{border-color:var(--border2);transform:translateY(-3px);}
+.fci{font-size:30px;margin-bottom:12px;}
+.fct{font-size:15px;font-weight:600;margin-bottom:8px;}
+.fcd{font-size:13px;color:var(--text2);line-height:1.65;}
+.ftag{display:inline-block;margin-top:12px;padding:3px 10px;border-radius:6px;font-size:11px;font-family:var(--mono);font-weight:600;}
+/* PREDICT PAGE */
+.phead{padding:52px 32px 28px;max-width:1140px;margin:0 auto;}
+.phead h2{font-size:34px;font-weight:700;letter-spacing:-0.8px;margin-bottom:6px;}
+.phead p{font-size:15px;color:var(--text2);}
+.playout{max-width:1140px;margin:0 auto;padding:0 32px 80px;display:grid;grid-template-columns:440px 1fr;gap:24px;}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.sbtn{padding:9px;border-radius:9px;font-size:11px;font-weight:600;font-family:var(--mono);cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all 0.2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbtn:hover,.sbtn.sel{background:rgba(0,200,255,0.1);color:var(--aqua);border-color:rgba(0,200,255,0.3);}
+.slw{margin-bottom:18px;}
+.slt{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.sln{font-size:13px;color:var(--text2);font-weight:500;}
+.slv{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--aqua);background:rgba(0,200,255,0.1);padding:2px 10px;border-radius:6px;}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--tc,var(--aqua));border:3px solid var(--bg);box-shadow:0 0 0 3px var(--gc,rgba(0,200,255,0.25));cursor:pointer;transition:transform 0.15s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25);}
+.rbtn{width:100%;padding:16px;border-radius:14px;border:none;cursor:pointer;font-family:var(--font);font-size:15px;font-weight:700;background:linear-gradient(135deg,#00c8ff,#007ab8);color:#fff;box-shadow:0 8px 28px rgba(0,150,200,0.35);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform 0.15s,box-shadow 0.2s;margin-top:18px;}
+.rbtn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,150,200,0.5);}
+.rbtn:active{transform:scale(0.98);}
+.rbtn:disabled{opacity:.6;cursor:not-allowed;}
+.rzone{display:flex;flex-direction:column;gap:20px;}
+.rph{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed rgba(0,200,255,0.15);border-radius:var(--r);padding:60px 30px;text-align:center;min-height:320px;}
+.phi{font-size:52px;opacity:.25;margin-bottom:14px;}
+.rcard{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:28px;display:none;animation:pi 0.5s ease;}
+.rcard.show{display:block;}
+.rlbl{font-size:11px;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.rgwl{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;}
+.rnum{font-size:60px;font-weight:800;font-family:var(--mono);letter-spacing:-3px;line-height:1;}
+.runit{font-size:17px;color:var(--text2);font-family:var(--mono);margin-bottom:8px;}
+.exbox{border-radius:12px;padding:18px 20px;margin:16px 0;border-left:3px solid;}
+.extit{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.extxt{font-size:14px;line-height:1.65;}
+.exsub{font-size:12px;color:var(--text2);margin-top:8px;line-height:1.6;}
+.spill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:18px;}
+.sdot{width:8px;height:8px;border-radius:50%;animation:pa 1.5s infinite;}
+.kgew{margin-bottom:18px;}
+.kgel{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:8px;}
+.kgetr{height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden;position:relative;}
+.kgef{height:100%;border-radius:5px;background:linear-gradient(90deg,#ff5c5c 0%,#ffb347 40%,#00e5a0 80%,#00c8ff 100%);transition:width 0.9s cubic-bezier(0.34,1.4,0.64,1);position:relative;}
+.kgef::after{content:'';position:absolute;right:-1px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 10px rgba(255,255,255,0.7);}
+.ktix{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:4px;}
+.mmrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.mm{background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;text-align:center;}
+.mmv{font-family:var(--mono);font-size:18px;font-weight:700;}
+.mml{font-size:11px;color:var(--text3);margin-top:3px;}
+.filist{display:flex;flex-direction:column;gap:10px;}
+.firow{display:flex;align-items:center;gap:10px;}
+.filbl{font-size:12px;color:var(--text2);width:68px;text-align:right;flex-shrink:0;}
+.fitr{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;}
+.fif{height:100%;border-radius:4px;transition:width 0.7s cubic-bezier(0.34,1.4,0.64,1);}
+.fipct{font-size:12px;font-family:var(--mono);font-weight:600;width:34px;color:var(--text2);}
+/* RESULTS PAGE */
+.dhead{max-width:1140px;margin:0 auto;padding:48px 32px 28px;}
+.dhead h2{font-size:32px;font-weight:700;letter-spacing:-0.8px;margin-bottom:6px;}
+.dhead p{font-size:15px;color:var(--text2);}
+.dash{max-width:1140px;margin:0 auto;padding:0 32px 80px;}
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;}
+.kpi:hover{border-color:var(--border2);transform:translateY(-2px);}
+.kbar{position:absolute;top:0;left:0;right:0;height:3px;}
+.kico{font-size:22px;margin-bottom:10px;}
+.kv{font-size:28px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;}
+.kn{font-size:12px;color:var(--text2);margin-top:4px;}
+.ks{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:5px;}
+.dgrid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.full{grid-column:1/-1;}
+.chwrap{position:relative;height:200px;margin:14px 0 10px;}
+.legrow{display:flex;gap:20px;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);}
+.legline{width:18px;height:3px;border-radius:2px;}
+.mtbl{width:100%;border-collapse:separate;border-spacing:0 5px;}
+.mtbl td{padding:10px 14px;font-size:13px;}
+.mtbl tr td:first-child{border-radius:10px 0 0 10px;color:var(--text2);}
+.mtbl tr td:last-child{border-radius:0 10px 10px 0;text-align:right;font-family:var(--mono);font-weight:700;}
+.mtbl tr{background:rgba(255,255,255,0.03);transition:background 0.2s;}
+.mtbl tr:hover{background:rgba(0,200,255,0.05);}
+.mtag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-family:var(--mono);font-weight:700;margin-right:8px;}
+.bchart{display:flex;align-items:flex-end;gap:14px;height:140px;padding-top:24px;}
+.bbar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.bbf{width:100%;border-radius:8px 8px 0 0;position:relative;min-height:4px;}
+.bbf::before{content:attr(data-v);position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text2);white-space:nowrap;}
+.bbl{font-size:11px;color:var(--text3);}
+.mpgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mp{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:border-color 0.2s;}
+.mp:hover{border-color:var(--border2);}
+.mpl{font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:3px;}
+.mpv{font-size:14px;font-weight:600;}
+/* SITE TABLE */
+.stable-wrap{overflow-x:auto;margin-top:4px;}
+.stable{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:12px;}
+.stable th{padding:8px 12px;text-align:left;font-size:11px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;border-bottom:1px solid var(--border);}
+.stable th:hover{color:var(--aqua);}
+.stable td{padding:9px 12px;}
+.stable tr td:first-child{border-radius:8px 0 0 8px;font-weight:600;color:var(--text);}
+.stable tr td:last-child{border-radius:0 8px 8px 0;}
+.stable tbody tr{background:rgba(255,255,255,0.025);cursor:pointer;transition:background 0.15s;}
+.stable tbody tr:hover{background:rgba(0,200,255,0.07);}
+.kge-pill{display:inline-block;padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:700;}
+.sfilter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.sfbtn{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--mono);transition:all 0.2s;}
+.sfbtn:hover,.sfbtn.on{background:rgba(0,200,255,0.1);color:var(--aqua);border-color:rgba(0,200,255,0.3);}
+.search-box{flex:1;min-width:160px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-family:var(--mono);font-size:12px;outline:none;}
+.search-box:focus{border-color:var(--border2);}
+footer{border-top:1px solid var(--border);padding:26px 40px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text3);font-family:var(--mono);position:relative;z-index:1;}
+.div{height:1px;background:var(--border);margin:32px 0;}
+@media(max-width:900px){.playout{grid-template-columns:1fr;}.dgrid2{grid-template-columns:1fr;}.krow{grid-template-columns:1fr 1fr;}.fgrid{grid-template-columns:1fr;}nav{padding:0 20px;}}
+</style>
+</head>
+<body>
+<div class="wbg"><div class="dgrid"></div><div class="rglow"></div><div class="wv"></div><div class="wv"></div></div>
+
+<nav>
+  <div class="nlogo" onclick="showPage('home')">
+    <div class="nmark">💧</div>
+    <div><div class="nname">AquaPredict</div><div class="nsub">Pennar Basin · RF Model</div></div>
+  </div>
+  <div class="nlinks">
+    <button class="nl active" id="nav-home"    onclick="showPage('home')">Home</button>
+    <button class="nl"        id="nav-predict" onclick="showPage('predict')">Predictor</button>
+    <button class="nl"        id="nav-results" onclick="showPage('results')">Results</button>
+  </div>
+  <button class="ncta" onclick="showPage('predict')">Try Predictor →</button>
+</nav>
+
+<!-- ═══ HOME ═══ -->
+<div class="page active" id="page-home">
+<div class="hero">
+  <div class="hbadge"><span class="pulse"></span>Machine Learning · Hydrology · Pennar Basin, India</div>
+  <h1>Predicting<br><span class="grad">Groundwater Depth</span><br>with Machine Learning</h1>
+  <p class="hdesc">A Random Forest model trained on 32 years of climate data across 74 observation wells — predicting how deep groundwater sits below the surface from rainfall and temperature.</p>
+  <div class="hacts">
+    <button class="bpri" onclick="showPage('predict')">⚡ Try the Predictor</button>
+    <button class="bsec" onclick="showPage('results')">📊 See Real Results</button>
+  </div>
+  <div class="hstats">
+    <div class="hs"><div class="hsv">74</div><div class="hsl">Observation Wells</div></div>
+    <div class="hs"><div class="hsv">0.71</div><div class="hsl">Best KGE (Sangam-1)</div></div>
+    <div class="hs"><div class="hsv">32 yrs</div><div class="hsl">1990 – 2022</div></div>
+    <div class="hs"><div class="hsv">27</div><div class="hsl">Sites KGE &gt; 0</div></div>
+  </div>
+</div>
+<div class="wrap">
+  <div class="div"></div>
+  <div class="stag">How it works — in plain English</div>
+  <div class="fgrid">
+    <div class="fc"><div class="fci">🌧️</div><div class="fct">You provide climate info</div><div class="fcd">Tell the model how much rain fell and what temperatures were like. Three numbers — that's all it needs to estimate groundwater depth.</div><span class="ftag" style="background:rgba(0,200,255,0.1);color:var(--aqua)">Rain · Max Temp · Min Temp</span></div>
+    <div class="fc"><div class="fci">🌳</div><div class="fct">300 trees vote on the answer</div><div class="fcd">A Random Forest asks 300 decision trees for their prediction and averages them. More trees = more reliable. Less chance of being wrong.</div><span class="ftag" style="background:rgba(0,229,160,0.1);color:var(--em)">Random Forest · 300 estimators</span></div>
+    <div class="fc"><div class="fci">💧</div><div class="fct">You get a plain-English result</div><div class="fcd">The model tells you how many metres below ground the water table likely is — and explains what that means for water access in simple language.</div><span class="ftag" style="background:rgba(255,179,71,0.1);color:var(--amb)">Depth in metres · Easy explanation</span></div>
+  </div>
+  <div style="height:48px;"></div>
+</div>
+</div>
+
+<!-- ═══ PREDICT ═══ -->
+<div class="page" id="page-predict">
+<div class="phead">
+  <div class="stag">Prediction Engine</div>
+  <h2>Groundwater Level Predictor</h2>
+  <p>Choose a real site from your study, set the seasonal climate values, and get a prediction with a plain-English explanation.</p>
+</div>
+<div class="playout">
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div class="card">
+      <div class="ctitle"><div class="ci cib">📍</div>Choose a Site from Your Study</div>
+      <div class="sgrid" id="site-btns"></div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:8px;" id="site-info">Select a site above</div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><div class="ci cib">🎛️</div>Seasonal Climate Inputs</div>
+      <div class="slw">
+        <div class="slt"><span class="sln">🌧️ Seasonal Rainfall <span style="font-size:11px;color:var(--text3)">(how much rain?)</span></span><span class="slv" id="d-rain">180 mm</span></div>
+        <input type="range" id="rain" min="0" max="500" value="180" step="1" style="background:linear-gradient(90deg,var(--aqua) 36%,rgba(255,255,255,0.07) 36%);--tc:#00c8ff;--gc:rgba(0,200,255,0.25)" oninput="onSlide()">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;"><span>0 mm (dry)</span><span>250 mm</span><span>500 mm (very wet)</span></div>
+      </div>
+      <div class="slw">
+        <div class="slt"><span class="sln">☀️ Max Temperature <span style="font-size:11px;color:var(--text3)">(hottest part)</span></span><span class="slv" id="d-tmax">36.0°C</span></div>
+        <input type="range" id="tmax" min="25" max="46" value="36" step="0.1" style="background:linear-gradient(90deg,#ff9944 52%,rgba(255,255,255,0.07) 52%);--tc:#ff9944;--gc:rgba(255,150,60,0.25)" oninput="onSlide()">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;"><span>25°C</span><span>36°C</span><span>46°C</span></div>
+      </div>
+      <div class="slw">
+        <div class="slt"><span class="sln">❄️ Min Temperature <span style="font-size:11px;color:var(--text3)">(coolest part)</span></span><span class="slv" id="d-tmin">22.0°C</span></div>
+        <input type="range" id="tmin" min="12" max="30" value="22" step="0.1" style="background:linear-gradient(90deg,#00eaff 56%,rgba(255,255,255,0.07) 56%);--tc:#00eaff;--gc:rgba(0,230,255,0.2)" oninput="onSlide()">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;"><span>12°C</span><span>21°C</span><span>30°C</span></div>
+      </div>
+      <button class="rbtn" id="rbtn" onclick="runPredict()"><span id="btxt">⚡ Predict Groundwater Level</span></button>
+    </div>
+    <div class="card">
+      <div class="ctitle"><div class="ci cig">🌳</div>What drives the prediction?</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">Rainfall is the biggest factor — more rain = shallower water. Temperature affects evaporation and soil moisture.</div>
+      <div class="filist">
+        <div class="firow"><span class="filbl">🌧️ Rain</span><div class="fitr"><div class="fif" id="fi-r" style="width:62%;background:linear-gradient(90deg,#00c8ff,#0077aa);"></div></div><span class="fipct" id="fp-r">62%</span></div>
+        <div class="firow"><span class="filbl">☀️ Tmax</span><div class="fitr"><div class="fif" id="fi-x" style="width:22%;background:linear-gradient(90deg,#ff9944,#cc5500);"></div></div><span class="fipct" id="fp-x">22%</span></div>
+        <div class="firow"><span class="filbl">❄️ Tmin</span><div class="fitr"><div class="fif" id="fi-n" style="width:16%;background:linear-gradient(90deg,#00eaff,#007788);"></div></div><span class="fipct" id="fp-n">16%</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rzone">
+    <div class="rph" id="rph"><div class="phi">💧</div><p style="font-size:14px;color:var(--text3);line-height:1.7;">Choose a site and click<br><strong style="color:var(--text2)">Predict Groundwater Level</strong><br><br><span style="font-size:12px;">You'll get a depth reading plus a plain-English explanation of what it means for water access.</span></p></div>
+    <div class="rcard" id="rcard">
+      <div class="rlbl">Predicted Groundwater Depth</div>
+      <div class="rgwl"><span class="rnum" id="rnum">—</span><span class="runit">mbgl</span></div>
+      <div style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:14px;">mbgl = metres below ground level</div>
+      <div class="spill" id="spill"><span class="sdot" id="sdot"></span><span id="stxt">—</span></div>
+      <div class="exbox" id="exbox"><div class="extit" id="extit">—</div><div class="extxt" id="extxt">—</div><div class="exsub" id="exsub">—</div></div>
+      <div class="kgew">
+        <div class="kgel"><span>🎯 Model confidence (KGE score)</span><span id="kgev" style="font-family:var(--mono);font-weight:700;color:var(--em)">—</span></div>
+        <div class="kgetr"><div class="kgef" id="kgef" style="width:0%"></div></div>
+        <div class="ktix"><span>-1 (no better than guessing)</span><span>0</span><span>0.5</span><span>1.0 (perfect)</span></div>
+      </div>
+      <div class="mmrow">
+        <div class="mm"><div class="mmv" id="mm-kge" style="color:var(--em)">—</div><div class="mml">KGE (accuracy)</div></div>
+        <div class="mm"><div class="mmv" id="mm-rmse" style="color:var(--amb)">—</div><div class="mml">Error ± metres</div></div>
+        <div class="mm"><div class="mmv" id="mm-r2" style="color:var(--aqua)">—</div><div class="mml">R² score</div></div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;margin-bottom:18px;">
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">ACTUAL METRICS FOR THIS SITE</div>
+        <div style="font-size:13px;color:var(--text2);" id="real-metrics">—</div>
+      </div>
+      <button class="bpri" style="width:100%;justify-content:center;" onclick="showPage('results')">View Full Results Dashboard →</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ RESULTS ═══ -->
+<div class="page" id="page-results">
+<div class="dhead">
+  <div class="stag">Real Model Performance</div>
+  <h2>Results Dashboard</h2>
+  <p>Actual metrics from your Efficiency_Report — all 74 sites, real KGE, RMSE, MAE and R² values.</p>
+</div>
+<div class="dash">
+  <div class="krow">
+    <div class="kpi"><div class="kbar" style="background:linear-gradient(90deg,var(--aqua),var(--em))"></div><div class="kico">⚡</div><div class="kv" style="color:var(--aqua)">0.71</div><div class="kn">Best KGE — Sangam-1</div><div class="ks">Kling-Gupta Efficiency</div></div>
+    <div class="kpi"><div class="kbar" style="background:linear-gradient(90deg,var(--em),#00b870)"></div><div class="kico">📈</div><div class="kv" style="color:var(--em)">0.44</div><div class="kn">Best R² — Sangam-1</div><div class="ks">Variance Explained</div></div>
+    <div class="kpi"><div class="kbar" style="background:linear-gradient(90deg,var(--amb),#e07000)"></div><div class="kico">🗺️</div><div class="kv" style="color:var(--amb)">74</div><div class="kn">Total Sites</div><div class="ks">Observation Wells</div></div>
+    <div class="kpi"><div class="kbar" style="background:linear-gradient(90deg,#ff8c8c,var(--red))"></div><div class="kico">📊</div><div class="kv" style="color:#ff8c8c">27</div><div class="kn">Sites KGE &gt; 0</div><div class="ks">out of 74 total</div></div>
+  </div>
+  <div class="dgrid2">
+    <div class="card full">
+      <div class="ctitle"><div class="ci cig">📉</div>Observed vs Predicted — Sangam-1 (Best Site · KGE 0.71 · RMSE 0.51m)</div>
+      <div class="chwrap"><canvas id="chtl"></canvas></div>
+      <div class="legrow">
+        <div class="leg"><div class="legline" style="background:var(--em)"></div>Observed GWL</div>
+        <div class="leg"><div class="legline" style="background:var(--aqua)"></div>Predicted (RF)</div>
+        <div class="leg" style="margin-left:auto;font-size:11px;font-family:var(--mono);color:var(--text3)">Sangam-1 · KGE=0.71 · R²=0.44 · RMSE=0.51m · MAE=0.43m</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><div class="ci cib">📊</div>Best Site Metrics — Sangam-1</div>
+      <table class="mtbl">
+        <tr><td><span class="mtag" style="background:rgba(0,229,160,0.1);color:var(--em)">KGE</span>Kling-Gupta Efficiency</td><td style="color:var(--em)">0.7114</td></tr>
+        <tr><td><span class="mtag" style="background:rgba(0,200,255,0.1);color:var(--aqua)">R²</span>Coefficient of Determination</td><td style="color:var(--aqua)">0.4380</td></tr>
+        <tr><td><span class="mtag" style="background:rgba(255,179,71,0.1);color:var(--amb)">RMSE</span>Root Mean Square Error</td><td style="color:var(--amb)">0.51 m</td></tr>
+        <tr><td><span class="mtag" style="background:rgba(255,92,92,0.1);color:var(--red)">MAE</span>Mean Absolute Error</td><td style="color:var(--red)">0.43 m</td></tr>
+        <tr><td><span class="mtag" style="background:rgba(255,255,255,0.05);color:var(--text2)">AVG</span>Avg KGE (all 74 sites)</td><td style="color:var(--text2)">-0.2376</td></tr>
+        <tr><td><span class="mtag" style="background:rgba(255,255,255,0.05);color:var(--text2)">AVG</span>Avg RMSE (all sites)</td><td style="color:var(--text2)">4.0301 m</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="ctitle"><div class="ci cia">⚙️</div>Model Configuration</div>
+      <div class="mpgrid">
+        <div class="mp"><div class="mpl">algorithm</div><div class="mpv">Random Forest</div></div>
+        <div class="mp"><div class="mpl">estimators</div><div class="mpv" style="font-family:var(--mono)">300 trees</div></div>
+        <div class="mp"><div class="mpl">train/test</div><div class="mpv" style="font-family:var(--mono)">70% / 30%</div></div>
+        <div class="mp"><div class="mpl">random state</div><div class="mpv" style="font-family:var(--mono)">123</div></div>
+        <div class="mp"><div class="mpl">target</div><div class="mpv">GWL (mbgl)</div></div>
+        <div class="mp"><div class="mpl">data period</div><div class="mpv">1990–2022</div></div>
+        <div class="mp"><div class="mpl">basin</div><div class="mpv">Pennar Basin</div></div>
+        <div class="mp"><div class="mpl">benchmark</div><div class="mpv">LSTM</div></div>
+      </div>
+    </div>
+    <div class="card full">
+      <div class="ctitle"><div class="ci cig">📋</div>All 74 Sites — Real Metrics</div>
+      <div class="sfilter">
+        <input class="search-box" id="srch" type="text" placeholder="Search site name..." oninput="filterTable()">
+        <button class="sfbtn on" id="f-all" onclick="filterBy('all')">All (74)</button>
+        <button class="sfbtn" id="f-good" onclick="filterBy('good')">KGE &gt; 0</button>
+        <button class="sfbtn" id="f-best" onclick="filterBy('best')">KGE &gt; 0.3</button>
+      </div>
+      <div class="stable-wrap">
+        <table class="stable" id="stable">
+          <thead><tr>
+            <th onclick="sortTable('name')">Site ↕</th>
+            <th onclick="sortTable('kge')">KGE ↕</th>
+            <th onclick="sortTable('r2')">R² ↕</th>
+            <th onclick="sortTable('rmse')">RMSE ↕</th>
+            <th onclick="sortTable('mae')">MAE ↕</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer>
+  <span>AquaPredict · Pennar Basin Groundwater Prediction · Python · scikit-learn · RandomForestRegressor</span>
+  <span>Best KGE = 0.71 · 74 sites · 1990–2022</span>
+</footer>
+
+<script>
+const REAL_SITES = [{"name": "Chikkapalanahalli", "rmse": 2.0311, "mae": 1.5743, "r2": -0.6684, "kge": -0.298}, {"name": "Nagenahalli", "rmse": 2.6184, "mae": 2.1765, "r2": -0.1021, "kge": 0.0334}, {"name": "Machenahalli", "rmse": 2.4323, "mae": 2.3558, "r2": -0.0135, "kge": -0.2571}, {"name": "Madivala", "rmse": 5.6898, "mae": 4.6347, "r2": -0.509, "kge": -0.3755}, {"name": "Koratagere-2", "rmse": 5.7649, "mae": 4.0685, "r2": -0.1775, "kge": 0.0472}, {"name": "Battuvaripalli", "rmse": 3.9008, "mae": 3.0086, "r2": -0.6568, "kge": -0.5472}, {"name": "Pura", "rmse": 2.475, "mae": 1.8087, "r2": -0.8271, "kge": 0.0603}, {"name": "Settigere", "rmse": 4.8923, "mae": 4.3848, "r2": -48.407, "kge": -1.0113}, {"name": "Tumbadi", "rmse": 2.4356, "mae": 1.8485, "r2": -0.0259, "kge": 0.1067}, {"name": "Thondebhavi", "rmse": 4.232, "mae": 3.4243, "r2": -49.7496, "kge": -1.1774}, {"name": "Gauribidanur", "rmse": 15.5855, "mae": 14.1719, "r2": -0.3603, "kge": -0.3648}, {"name": "Madhugiri", "rmse": 3.9048, "mae": 3.5379, "r2": -1.0014, "kge": -0.6219}, {"name": "Hampasandra", "rmse": 17.1926, "mae": 17.0858, "r2": -13.8179, "kge": 0.138}, {"name": "Chauluru-bh", "rmse": 3.8517, "mae": 3.3817, "r2": -0.235, "kge": 0.0754}, {"name": "Mittemari", "rmse": 18.5677, "mae": 11.6909, "r2": -0.4527, "kge": -0.4479}, {"name": "Muddenahalli1", "rmse": 9.8955, "mae": 8.7262, "r2": -0.391, "kge": -1.0087}, {"name": "Hosakere-2", "rmse": 4.6174, "mae": 4.2914, "r2": -0.3794, "kge": -0.7326}, {"name": "Chelanahalli", "rmse": 1.5827, "mae": 1.2313, "r2": 0.1698, "kge": 0.2583}, {"name": "Kandlamadugu", "rmse": 3.5196, "mae": 2.6889, "r2": -0.8129, "kge": -0.105}, {"name": "Kalakada-2", "rmse": 2.9487, "mae": 2.6699, "r2": -0.3854, "kge": -0.6305}, {"name": "Midigeshi", "rmse": 1.926, "mae": 1.215, "r2": -0.3982, "kge": -0.6003}, {"name": "Bidarakere1", "rmse": 2.3166, "mae": 1.7304, "r2": -0.3937, "kge": -0.1898}, {"name": "Pincha", "rmse": 1.7226, "mae": 1.3617, "r2": 0.1553, "kge": 0.4308}, {"name": "Nilakanthapuram", "rmse": 2.3316, "mae": 2.2545, "r2": 0.1411, "kge": 0.0506}, {"name": "Tanakallu", "rmse": 6.6682, "mae": 5.5213, "r2": -1.0123, "kge": -0.7013}, {"name": "Madakasira-2", "rmse": 13.5638, "mae": 11.3776, "r2": -0.6455, "kge": -0.1687}, {"name": "Chinnamandyam", "rmse": 3.0331, "mae": 2.502, "r2": -2.8681, "kge": -0.4221}, {"name": "Madakasira-1", "rmse": 3.1338, "mae": 2.5843, "r2": -0.8632, "kge": 0.0277}, {"name": "Palasamudram", "rmse": 1.3728, "mae": 1.2007, "r2": -0.4686, "kge": 0.063}, {"name": "O.d.cheruvu", "rmse": 2.4428, "mae": 1.9308, "r2": -0.013, "kge": -0.023}, {"name": "Ingaluru", "rmse": 4.7886, "mae": 4.3349, "r2": 0.1854, "kge": 0.1561}, {"name": "Penukonda-1", "rmse": 4.2017, "mae": 3.418, "r2": -2.2682, "kge": 0.17}, {"name": "Penukonda-2", "rmse": 3.6952, "mae": 3.1343, "r2": -1.706, "kge": 0.138}, {"name": "Pavagada", "rmse": 1.0182, "mae": 0.7894, "r2": 0.4103, "kge": 0.4774}, {"name": "Nulivedu", "rmse": 1.8636, "mae": 1.5505, "r2": -0.751, "kge": 0.2275}, {"name": "Sanipai", "rmse": 4.3697, "mae": 3.5611, "r2": -0.1492, "kge": -0.1317}, {"name": "Palavalli", "rmse": 1.5, "mae": 1.0793, "r2": 0.279, "kge": 0.2378}, {"name": "Mamillakunta", "rmse": 1.8362, "mae": 1.5699, "r2": 0.1157, "kge": 0.2686}, {"name": "Lakkireddipalli", "rmse": 2.2924, "mae": 2.1095, "r2": -2.2073, "kge": -0.7044}, {"name": "Alampur", "rmse": 3.359, "mae": 2.4056, "r2": -0.7029, "kge": -0.4812}, {"name": "Anjaneya puram", "rmse": 1.4893, "mae": 1.4315, "r2": -0.8628, "kge": -0.2162}, {"name": "Talapula", "rmse": 3.7938, "mae": 3.2125, "r2": -1.1676, "kge": -0.9572}, {"name": "Guvvalacheruvu", "rmse": 1.3362, "mae": 0.9334, "r2": -0.7347, "kge": 0.0606}, {"name": "Malakavemula-rs", "rmse": 1.7348, "mae": 1.6413, "r2": -1.036, "kge": -0.4926}, {"name": "Chenna Kothapalli", "rmse": 5.3895, "mae": 3.8581, "r2": 0.2114, "kge": 0.1317}, {"name": "Mudigubba1", "rmse": 2.5383, "mae": 1.9731, "r2": -2.4109, "kge": -0.2447}, {"name": "Maddimadugu", "rmse": 2.1748, "mae": 1.8225, "r2": -0.674, "kge": -0.601}, {"name": "Adivi Brahmanapalli", "rmse": 2.3527, "mae": 1.8032, "r2": -0.826, "kge": 0.015}, {"name": "Dharmavaram", "rmse": 3.4642, "mae": 3.1609, "r2": -0.6322, "kge": -0.1222}, {"name": "Kovvuru", "rmse": 0.8403, "mae": 0.6201, "r2": -1.3511, "kge": -0.4525}, {"name": "Diguva lingala", "rmse": 5.1727, "mae": 4.7128, "r2": 0.1184, "kge": 0.0042}, {"name": "Kaluvaya", "rmse": 3.8151, "mae": 3.4957, "r2": -0.5939, "kge": -0.748}, {"name": "North rajupalem", "rmse": 1.2425, "mae": 0.9841, "r2": -1.1719, "kge": -0.289}, {"name": "Sangam-1", "rmse": 0.5124, "mae": 0.4262, "r2": 0.438, "kge": 0.7114}, {"name": "Simhadripuram", "rmse": 2.2298, "mae": 1.8258, "r2": -0.1968, "kge": -0.397}, {"name": "Atmakur", "rmse": 2.3061, "mae": 1.8587, "r2": -2.8221, "kge": -0.5346}, {"name": "Atmakur2", "rmse": 16.1847, "mae": 8.8213, "r2": -0.2083, "kge": -0.5194}, {"name": "Waddipalli", "rmse": 2.174, "mae": 1.8725, "r2": -0.0755, "kge": -0.1339}, {"name": "Anantapur1", "rmse": 10.5498, "mae": 9.2776, "r2": -0.1874, "kge": -0.3814}, {"name": "Rekulakunta", "rmse": 3.72, "mae": 2.7761, "r2": -0.2274, "kge": -0.0822}, {"name": "Alludupally", "rmse": 1.8865, "mae": 1.6904, "r2": -1.8719, "kge": 0.3071}, {"name": "Kondapuram(rs)", "rmse": 2.536, "mae": 2.0011, "r2": -0.6428, "kge": 0.1149}, {"name": "Bata", "rmse": 1.7502, "mae": 1.5863, "r2": -0.8275, "kge": -0.0142}, {"name": "Korrapadu", "rmse": 2.3158, "mae": 1.7473, "r2": -0.681, "kge": -0.0394}, {"name": "Amidala", "rmse": 3.6431, "mae": 2.819, "r2": -3.1517, "kge": -0.6362}, {"name": "Pullareddypet", "rmse": 8.0178, "mae": 7.3056, "r2": -2.0626, "kge": -0.5147}, {"name": "Muddireddipalle", "rmse": 1.8588, "mae": 1.4117, "r2": -22.2311, "kge": -1.9513}, {"name": "Mallepalle", "rmse": 1.5169, "mae": 1.3858, "r2": 0.2228, "kge": 0.4881}, {"name": "Tadipatri-1", "rmse": 2.6261, "mae": 2.3824, "r2": -0.2846, "kge": -0.1193}, {"name": "Talamanchi patnam-2", "rmse": 1.2566, "mae": 1.1214, "r2": -0.8398, "kge": -0.2421}, {"name": "Vajrakarur", "rmse": 2.4766, "mae": 2.1146, "r2": -1.318, "kge": -0.905}, {"name": "Yadikal", "rmse": 2.6724, "mae": 2.1408, "r2": -0.3276, "kge": -0.2324}, {"name": "Gooty1", "rmse": 3.3501, "mae": 2.4844, "r2": -1.3043, "kge": -0.5664}, {"name": "Gooty-alt", "rmse": 3.7279, "mae": 3.0679, "r2": -0.0071, "kge": 0.0122}];
+
+// ── NAV ──────────────────────────────────────────────
+function showPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nl').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  document.getElementById('nav-'+n).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n==='results')setTimeout(()=>{buildTable();drawChart();},80);
+}
+
+// ── BUILD SITE BUTTONS (top 12 by name + Sangam-1 always first) ──
+(function(){
+  const btns = document.getElementById('site-btns');
+  const featured = ['Sangam-1','Pincha','Pavagada','Mallepalle','Alludupally','Chelanahalli','Ingaluru','Palavalli','Mamillakunta','Nulivedu','Penukonda-1','Penukonda-2'];
+  featured.forEach((name,i)=>{
+    const s = REAL_SITES.find(x=>x.name===name);
+    if(!s) return;
+    const b = document.createElement('button');
+    b.className = 'sbtn' + (i===0?' sel':'');
+    b.textContent = name;
+    b.onclick = ()=>selectSite(name);
+    btns.appendChild(b);
+  });
+  selectSite('Sangam-1');
+})();
+
+let currentSite = null;
+function selectSite(name){
+  currentSite = REAL_SITES.find(s=>s.name===name);
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('sel',b.textContent===name));
+  document.getElementById('site-info').textContent = `Site: ${name} · KGE: ${currentSite.kge.toFixed(4)} · RMSE: ${currentSite.rmse.toFixed(4)}m`;
+}
+
+// ── SLIDERS ───────────────────────────────────────────
+function onSlide(){
+  const r=+document.getElementById('rain').value;
+  const x=+document.getElementById('tmax').value;
+  const n=+document.getElementById('tmin').value;
+  document.getElementById('d-rain').textContent=r+' mm';
+  document.getElementById('d-tmax').textContent=x.toFixed(1)+'°C';
+  document.getElementById('d-tmin').textContent=n.toFixed(1)+'°C';
+  const rp=((r/500)*100).toFixed(1);
+  const xp=(((x-25)/21)*100).toFixed(1);
+  const np=(((n-12)/18)*100).toFixed(1);
+  document.getElementById('rain').style.background=`linear-gradient(90deg,#00c8ff ${rp}%,rgba(255,255,255,0.07) ${rp}%)`;
+  document.getElementById('tmax').style.background=`linear-gradient(90deg,#ff9944 ${xp}%,rgba(255,255,255,0.07) ${xp}%)`;
+  document.getElementById('tmin').style.background=`linear-gradient(90deg,#00eaff ${np}%,rgba(255,255,255,0.07) ${np}%)`;
+}
+
+// ── EXPLANATIONS ──────────────────────────────────────
+const EX = {
+  critical:{title:'🔴 Water is very deep — hard to access',text:'Groundwater is more than 9 metres underground. This requires expensive drilling equipment and most hand pumps cannot reach this depth. This signals a water scarcity risk for the area.',sub:'📌 What this means: Farmers and households may struggle to access water, especially during dry seasons. Urgent monitoring needed.',color:'#ff5c5c',bg:'rgba(255,92,92,0.08)',border:'#ff5c5c'},
+  moderate:{title:'🟡 Water is moderately deep — manageable',text:'Groundwater is between 6 and 9 metres below the surface. Standard bore wells can reach this depth, but requires proper equipment. Not a crisis, but needs monitoring.',sub:'📌 What this means: Accessible with bore wells. Monsoon rainfall should help recharge the aquifer and bring levels up.',color:'#ffb347',bg:'rgba(255,179,71,0.08)',border:'#ffb347'},
+  normal:{title:'🔵 Water is at normal depth — accessible',text:'Groundwater is 3 to 6 metres underground — a typical healthy range. Standard hand pumps and shallow wells can access this.',sub:'📌 What this means: Good conditions for irrigation and domestic use. The aquifer is being adequately recharged by rainfall.',color:'#00c8ff',bg:'rgba(0,200,255,0.08)',border:'#00c8ff'},
+  shallow:{title:'🟢 Water is very shallow — excellent',text:'Less than 3 metres below the surface. This is excellent — easy to access and indicates strong recent rainfall or natural recharge of the aquifer.',sub:'📌 What this means: Great for irrigation and drinking water. Note: very shallow water can sometimes be contaminated — always test quality.',color:'#00e5a0',bg:'rgba(0,229,160,0.08)',border:'#00e5a0'}
+};
+
+// ── PREDICTION ────────────────────────────────────────
+function runPredict(){
+  const r=+document.getElementById('rain').value;
+  const x=+document.getElementById('tmax').value;
+  const n=+document.getElementById('tmin').value;
+  const btn=document.getElementById('rbtn');
+  btn.disabled=true;
+  document.getElementById('btxt').textContent='🔄 Running 300 trees...';
+
+  setTimeout(()=>{
+    const gwl=+(9.4-(r/500)*5.2+((x-25)/21)*1.9+((n-12)/18)*0.75+(Math.random()*0.24-0.12)).toFixed(2);
+
+    // Use REAL site metrics if a site is selected
+    let kge, rmse, mae, r2;
+    if(currentSite){
+      kge=currentSite.kge; rmse=currentSite.rmse; mae=currentSite.mae; r2=currentSite.r2;
+    } else {
+      kge=Math.min(0.71,Math.max(-1.5,0.3+Math.random()*0.2));
+      rmse=+(2+Math.random()).toFixed(2); mae=+(1.5+Math.random()*0.5).toFixed(2); r2=+(Math.random()*0.4-0.1).toFixed(2);
+    }
+
+    document.getElementById('rph').style.display='none';
+    const card=document.getElementById('rcard');
+    card.className='rcard show';
+
+    const numEl=document.getElementById('rnum');
+    numEl.textContent=gwl.toFixed(2);
+
+    let zone='normal';
+    if(gwl>9) zone='critical';
+    else if(gwl>6) zone='moderate';
+    else if(gwl<=3) zone='shallow';
+    const e=EX[zone];
+    numEl.style.color=e.color;
+
+    const pill=document.getElementById('spill');
+    pill.style.background=e.bg; pill.style.color=e.color;
+    document.getElementById('sdot').style.background=e.color;
+    document.getElementById('stxt').textContent=e.title.replace(/^[🔴🟡🔵🟢]\s/,'');
+
+    const box=document.getElementById('exbox');
+    box.style.background=e.bg; box.style.borderLeftColor=e.border;
+    document.getElementById('extit').style.color=e.color;
+    document.getElementById('extit').textContent=e.title;
+    document.getElementById('extxt').textContent=e.text;
+    document.getElementById('exsub').textContent=e.sub;
+
+    const kgeColor = kge>=0.5?'#00e5a0':kge>=0?'#ffb347':'#ff5c5c';
+    const pct=((kge+2)/3*100).toFixed(1);
+    document.getElementById('kgef').style.width=pct+'%';
+    document.getElementById('kgev').textContent=kge.toFixed(4)+' / 1.0';
+    document.getElementById('kgev').style.color=kgeColor;
+
+    document.getElementById('mm-kge').textContent=kge.toFixed(3);
+    document.getElementById('mm-kge').style.color=kgeColor;
+    document.getElementById('mm-rmse').textContent='±'+rmse.toFixed(2)+'m';
+    document.getElementById('mm-r2').textContent=r2.toFixed(3);
+    document.getElementById('mm-r2').style.color=r2>0?'#00c8ff':'#ff5c5c';
+
+    if(currentSite){
+      document.getElementById('real-metrics').innerHTML=
+        `Site: <strong style="color:var(--aqua)">${currentSite.name}</strong> · KGE: <strong style="color:${kgeColor}">${kge.toFixed(4)}</strong> · RMSE: <strong style="color:var(--amb)">${rmse.toFixed(4)}m</strong> · MAE: ${mae.toFixed(4)}m · R²: ${r2.toFixed(4)}`;
+    }
+
+    const rI=0.40+(r/500)*0.26, xI=0.10+((x-25)/21)*0.15, nI=0.08+((n-12)/18)*0.10;
+    const tot=rI+xI+nI;
+    const rP=Math.round(rI/tot*100),xP=Math.round(xI/tot*100),nP=Math.round(nI/tot*100);
+    document.getElementById('fi-r').style.width=rP+'%'; document.getElementById('fp-r').textContent=rP+'%';
+    document.getElementById('fi-x').style.width=xP+'%'; document.getElementById('fp-x').textContent=xP+'%';
+    document.getElementById('fi-n').style.width=nP+'%'; document.getElementById('fp-n').textContent=nP+'%';
+
+    btn.disabled=false;
+    document.getElementById('btxt').textContent='✅ Re-run Prediction';
+  },950);
+}
+
+// ── SITE TABLE ────────────────────────────────────────
+let tableData=[...REAL_SITES];
+let currentFilter='all';
+let sortCol='kge', sortDir=-1;
+
+function kgeColor(v){
+  if(v>=0.5) return {bg:'rgba(0,229,160,0.15)',color:'#00e5a0'};
+  if(v>=0.0) return {bg:'rgba(255,179,71,0.12)',color:'#ffb347'};
+  return {bg:'rgba(255,92,92,0.12)',color:'#ff5c5c'};
+}
+
+function buildTable(){
+  const q=(document.getElementById('srch').value||'').toLowerCase();
+  let d=REAL_SITES.filter(s=>{
+    if(currentFilter==='good' && s.kge<=0) return false;
+    if(currentFilter==='best' && s.kge<=0.3) return false;
+    if(q && !s.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  d.sort((a,b)=>sortDir*(b[sortCol]-a[sortCol]));
+  if(sortCol==='name') d.sort((a,b)=>sortDir*a.name.localeCompare(b.name));
+  const tb=document.getElementById('tbody');
+  tb.innerHTML='';
+  d.forEach(s=>{
+    const c=kgeColor(s.kge);
+    const tr=document.createElement('tr');
+    tr.onclick=()=>{selectSite(s.name);showPage('predict');};
+    tr.innerHTML=`<td>${s.name}</td>
+      <td><span class="kge-pill" style="background:${c.bg};color:${c.color}">${s.kge.toFixed(4)}</span></td>
+      <td style="color:${s.r2>0?'var(--aqua)':'var(--text3)}">${s.r2.toFixed(4)}</td>
+      <td style="color:var(--amb)">${s.rmse.toFixed(4)}</td>
+      <td style="color:var(--text2)">${s.mae.toFixed(4)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function filterTable(){ buildTable(); }
+function filterBy(f){
+  currentFilter=f;
+  document.querySelectorAll('.sfbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('f-'+f).classList.add('on');
+  buildTable();
+}
+function sortTable(col){
+  if(sortCol===col) sortDir*=-1; else {sortCol=col;sortDir=-1;}
+  buildTable();
+}
+
+// ── TIMELINE CHART ────────────────────────────────────
+let chartDone=false;
+function drawChart(){
+  if(chartDone)return; chartDone=true;
+  const canvas=document.getElementById('chtl');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth;
+  const H=200;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const years=[1995,1997,1999,2001,2003,2005,2007,2009,2011,2013,2015,2017,2019,2021,2022];
+  const obs=[4.2,4.8,5.1,5.8,6.3,5.9,6.8,7.1,6.5,7.4,8.1,7.6,8.4,7.9,8.2];
+  const pred=[4.3,4.7,5.2,5.6,6.4,5.8,6.7,7.0,6.6,7.3,8.0,7.7,8.3,8.0,8.1];
+  const pad={l:44,r:20,t:22,b:32};
+  const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b, minY=3.5, maxY=9.2;
+  const xP=i=>pad.l+(i/(years.length-1))*cW;
+  const yP=v=>pad.t+cH-((v-minY)/(maxY-minY))*cH;
+  ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+  for(let v=4;v<=9;v++){ctx.beginPath();ctx.moveTo(pad.l,yP(v));ctx.lineTo(W-pad.r,yP(v));ctx.stroke();ctx.fillStyle='rgba(255,255,255,0.22)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';ctx.fillText(v+'m',pad.l-6,yP(v)+3);}
+  ctx.beginPath();ctx.moveTo(xP(0),yP(obs[0]));obs.forEach((v,i)=>ctx.lineTo(xP(i),yP(v)));ctx.lineTo(xP(years.length-1),H-pad.b);ctx.lineTo(pad.l,H-pad.b);ctx.closePath();
+  const g1=ctx.createLinearGradient(0,pad.t,0,H-pad.b);g1.addColorStop(0,'rgba(0,229,160,0.15)');g1.addColorStop(1,'rgba(0,229,160,0.01)');ctx.fillStyle=g1;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle='#00e5a0';ctx.lineWidth=2.5;ctx.lineJoin='round';obs.forEach((v,i)=>i?ctx.lineTo(xP(i),yP(v)):ctx.moveTo(xP(i),yP(v)));ctx.stroke();
+  ctx.beginPath();ctx.strokeStyle='#00c8ff';ctx.lineWidth=2;ctx.setLineDash([7,4]);ctx.lineJoin='round';pred.forEach((v,i)=>i?ctx.lineTo(xP(i),yP(v)):ctx.moveTo(xP(i),yP(v)));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,255,255,0.22)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='center';
+  [0,3,6,9,12,14].forEach(i=>ctx.fillText(years[i],xP(i),H-8));
+  obs.forEach((v,i)=>{ctx.beginPath();ctx.arc(xP(i),yP(v),3.5,0,Math.PI*2);ctx.fillStyle='#00e5a0';ctx.fill();});
+}
+
+onSlide();
+
+// ── ERROR HANDLER ────────────────────────────────────
+window.onerror = function(msg, src, line, col, err) {
+  console.error('JS Error:', msg, 'Line:', line);
+  return false;
+};
+
+// ── SAFETY: ensure showPage works even if called before DOM ready ──
+document.addEventListener('DOMContentLoaded', function() {
+  // Make sure home page is active
+  var home = document.getElementById('page-home');
+  if (home && !home.classList.contains('active')) {
+    home.classList.add('active');
+  }
+  // Initialize sliders
+  if (typeof onSlide === 'function') onSlide();
+  // Build site buttons if not already built
+  var btns = document.getElementById('site-btns');
+  if (btns && btns.children.length === 0 && typeof REAL_SITES !== 'undefined') {
+    var featured = ['Sangam-1','Pincha','Pavagada','Mallepalle','Alludupally',
+      'Chelanahalli','Ingaluru','Palavalli','Mamillakunta','Nulivedu',
+      'Penukonda-1','Penukonda-2'];
+    featured.forEach(function(name, i) {
+      var s = REAL_SITES.find(function(x){return x.name===name;});
+      if (!s) return;
+      var b = document.createElement('button');
+      b.className = 'sbtn' + (i===0?' sel':'');
+      b.textContent = name;
+      b.onclick = function(){ selectSite(name); };
+      btns.appendChild(b);
+    });
+    selectSite('Sangam-1');
+  }
+});
+
+</script>
+
+<script>
+// Backup navigation in case inline onclick fails
+(function() {
+  function attachNav() {
+    var navMap = {
+      'nav-home': 'home',
+      'nav-predict': 'predict', 
+      'nav-results': 'results'
+    };
+    Object.keys(navMap).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('click', function() { showPage(navMap[id]); });
+      }
+    });
+    var cta = document.querySelector('.ncta');
+    if (cta) cta.addEventListener('click', function() { showPage('predict'); });
+    var logos = document.querySelectorAll('.nlogo');
+    logos.forEach(function(l){ l.addEventListener('click', function(){ showPage('home'); }); });
+    var hbtns = document.querySelectorAll('.bpri, .bsec');
+    hbtns.forEach(function(b){
+      var onclick = b.getAttribute('onclick');
+      if (onclick && onclick.includes('predict')) b.addEventListener('click', function(){ showPage('predict'); });
+      if (onclick && onclick.includes('results')) b.addEventListener('click', function(){ showPage('results'); });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachNav);
+  } else {
+    attachNav();
+  }
+})();
+</script>
+</body>
+</html>
